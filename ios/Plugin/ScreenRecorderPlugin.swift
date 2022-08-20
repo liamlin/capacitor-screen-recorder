@@ -20,12 +20,13 @@ public class ScreenRecorderPlugin: CAPPlugin {
         })
     }
     @objc func stop(_ call: CAPPluginCall) {
-        implementation.stoprecording(handler: { error in
+        implementation.stoprecording(handler: { (error, url) in
             if let error = error {
                 debugPrint("Error when stop recording \(error)")
                 call.reject("Cannot stop recording")
-            } else {
-                call.resolve()
+            } else if let url = url {
+                debugPrint("got url when stop recording \(url)")
+                call.resolve(["url": url.absoluteString])
             }
         })
     }

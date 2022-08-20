@@ -91,7 +91,7 @@ final public class ScreenRecorder {
     newVideoWriterInput.expectsMediaDataInRealTime = true
     videoWriter?.add(newVideoWriterInput)
   }
-  
+
   private func createAndAddAudioInput() -> AVAssetWriterInput {
     let settings = [
         AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
@@ -104,7 +104,7 @@ final public class ScreenRecorder {
 
     audioInput.expectsMediaDataInRealTime = true
     videoWriter?.add(audioInput)
-    
+
     return audioInput
   }
 
@@ -147,7 +147,7 @@ final public class ScreenRecorder {
       self.videoWriterInput?.append(sampleBuffer)
     }
   }
-  
+
   private func add(sample: CMSampleBuffer, to writerInput: AVAssetWriterInput?) {
     if writerInput?.isReadyForMoreMediaData ?? false {
       writerInput?.append(sample)
@@ -159,10 +159,10 @@ final public class ScreenRecorder {
 
   - Parameter errorHandler: Called when an error is found
   */
-  public func stoprecording(handler: @escaping (Error?) -> Void) {
+  public func stoprecording(handler: @escaping (Error?, URL?) -> Void) {
     recorder.stopCapture( handler: { error in
       if let error = error {
-        handler(error)
+        handler(error, nil)
       } else {
         self.videoWriterInput?.markAsFinished()
         self.micAudioWriterInput?.markAsFinished()
@@ -174,7 +174,7 @@ final public class ScreenRecorder {
     })
   }
 
-  private func saveVideoToCameraRollAfterAuthorized(handler: @escaping (Error?) -> Void) {
+  private func saveVideoToCameraRollAfterAuthorized(handler: @escaping (Error?, URL?) -> Void) {
     if PHPhotoLibrary.authorizationStatus() == .authorized {
         self.saveVideoToCameraRoll(handler: handler)
     } else {
@@ -182,24 +182,24 @@ final public class ScreenRecorder {
             if status == .authorized {
                 self.saveVideoToCameraRoll(handler: handler)
             } else {
-              handler(ScreenRecorderError.photoLibraryAccessNotGranted)
+              handler(ScreenRecorderError.photoLibraryAccessNotGranted, nil)
           }
         })
     }
   }
 
-  private func saveVideoToCameraRoll(handler: @escaping (Error?) -> Void) {
+  private func saveVideoToCameraRoll(handler: @escaping (Error?, URL?) -> Void) {
     guard let videoOutputURL = self.videoOutputURL else {
-      return handler(nil)
+      return handler(nil, nil)
     }
 
     PHPhotoLibrary.shared().performChanges({
       PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: videoOutputURL)
     }, completionHandler: { _, error in
       if let error = error {
-          handler(error)
+          handler(error, nil)
       } else {
-          handler(nil)
+          handler(nil, videoOutputURL)
       }
     })
   }
