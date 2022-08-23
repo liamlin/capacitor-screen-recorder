@@ -35,12 +35,16 @@ final public class ScreenRecorder {
   public func startRecording(to outputURL: URL? = nil,
                              size: CGSize? = nil,
                              saveToCameraRoll: Bool = false,
+                             mute: Bool = true,
                              handler: @escaping (Error?) -> Void) {
-    recorder.isMicrophoneEnabled = true
+    recorder.isMicrophoneEnabled = !mute
+    self.saveToCameraRoll = saveToCameraRoll
     do {
         try createVideoWriter(in: outputURL)
         addVideoWriterInput(size: size)
-        self.micAudioWriterInput = createAndAddAudioInput()
+        if (recorder.isMicrophoneEnabled) {
+          self.micAudioWriterInput = createAndAddAudioInput()
+        }
         self.appAudioWriterInput = createAndAddAudioInput()
         startCapture(handler: handler)
     } catch let err {
@@ -165,10 +169,16 @@ final public class ScreenRecorder {
         handler(error, nil)
       } else {
         self.videoWriterInput?.markAsFinished()
-        self.micAudioWriterInput?.markAsFinished()
+        if (self.recorder.isMicrophoneEnabled) {
+          self.micAudioWriterInput?.markAsFinished()
+        }
         self.appAudioWriterInput?.markAsFinished()
         self.videoWriter?.finishWriting {
-          self.saveVideoToCameraRollAfterAuthorized(handler: handler)
+            if (self.saveToCameraRoll) {
+                self.saveVideoToCameraRollAfterAuthorized(handler: handler)
+            } else {
+                handler(nil, self.videoOutputURL)
+            }
         }
       }
     })

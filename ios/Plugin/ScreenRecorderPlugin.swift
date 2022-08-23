@@ -10,7 +10,9 @@ public class ScreenRecorderPlugin: CAPPlugin {
     private let implementation = ScreenRecorder()
 
     @objc func start(_ call: CAPPluginCall) {
-        implementation.startRecording(saveToCameraRoll: true, handler: { error in
+        let mute = call.getBool("mute") ?? true
+        let saveToCameraRoll = call.getBool("saveToCameraRoll") ?? false
+        implementation.startRecording(saveToCameraRoll: saveToCameraRoll, mute: mute, handler: { error in
             if let error = error {
                 debugPrint("Error when start recording \(error)")
                 call.reject("Cannot start recording")
