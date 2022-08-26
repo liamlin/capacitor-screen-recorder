@@ -139,6 +139,12 @@ final public class ScreenRecorder {
             handler(nil)
             sent = true
         }
+    }, completionHandler: { (error) in
+        if let error = error {
+            handler(error)
+        } else {
+            handler(nil)
+        }
     })
   }
 
